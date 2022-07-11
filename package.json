@@ -1,0 +1,16 @@
+{
+  "name": "temperature-converter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "elm": "0.19.1-5",
+    "elm-format": "^0.8.5",
+    "elm-review": "^2.7.2",
+    "elm-test": "0.19.1-revision9",
+    "esbuild": "^0.14.49"
+  }
+}
