@@ -4,7 +4,7 @@ import Browser exposing (sandbox)
 import Html exposing (Html, fieldset, form, input, label, legend, main_, strong, text)
 import Html.Attributes exposing (style, type_, value)
 import Html.Events exposing (onInput, onSubmit)
-import Temperature exposing (Kelvin, Temperature(..))
+import Temperature exposing (Celcius, Farenheit, Kelvin, Temperature(..))
 import Unit exposing (Unit(..))
 
 
@@ -22,10 +22,10 @@ main =
 
 
 type alias Model =
-    { celcius : Temperature Temperature.Celcius
-    , farenheit : Temperature Temperature.Farenheit
-    , kelvin : Temperature Temperature.Kelvin
-    , lastUpdated : Unit
+    { celcius : Temperature Celcius
+    , farenheit : Temperature Farenheit
+    , kelvin : Temperature Kelvin
+    , baseUnit : Unit
     }
 
 
@@ -34,7 +34,7 @@ init =
     { farenheit = Temperature 32
     , celcius = Temperature 0
     , kelvin = Temperature 273.15
-    , lastUpdated = C
+    , baseUnit = C
     }
 
 
@@ -53,11 +53,11 @@ update message model =
 
         CelciusChanged value ->
             let
-                celcius : Temperature Temperature.Celcius
+                celcius : Temperature Celcius
                 celcius =
                     Temperature.fromString value
 
-                farenheit : Temperature Temperature.Farenheit
+                farenheit : Temperature Farenheit
                 farenheit =
                     Temperature.celciusToFarenheit celcius
 
@@ -65,15 +65,15 @@ update message model =
                 kelvin =
                     Temperature.celciusToKelvin celcius
             in
-            { model | celcius = celcius, farenheit = farenheit, kelvin = kelvin, lastUpdated = C }
+            { model | celcius = celcius, farenheit = farenheit, kelvin = kelvin, baseUnit = C }
 
         FarenheitChanged value ->
             let
-                farenheit : Temperature Temperature.Farenheit
+                farenheit : Temperature Farenheit
                 farenheit =
                     Temperature.fromString value
 
-                celcius : Temperature Temperature.Celcius
+                celcius : Temperature Celcius
                 celcius =
                     Temperature.farneheitToCelcius farenheit
 
@@ -81,23 +81,23 @@ update message model =
                 kelvin =
                     Temperature.farneheitToKelvin farenheit
             in
-            { model | farenheit = farenheit, celcius = celcius, kelvin = kelvin, lastUpdated = F }
+            { model | farenheit = farenheit, celcius = celcius, kelvin = kelvin, baseUnit = F }
 
         KelvinChanged value ->
             let
-                kelvin : Temperature Temperature.Kelvin
+                kelvin : Temperature Kelvin
                 kelvin =
                     Temperature.fromString value
 
-                celcius : Temperature Temperature.Celcius
+                celcius : Temperature Celcius
                 celcius =
                     Temperature.kelvinToCelcius kelvin
 
-                farenheit : Temperature Temperature.Farenheit
+                farenheit : Temperature Farenheit
                 farenheit =
                     Temperature.kelvinToFarenheit kelvin
             in
-            { model | kelvin = kelvin, celcius = celcius, farenheit = farenheit, lastUpdated = K }
+            { model | kelvin = kelvin, celcius = celcius, farenheit = farenheit, baseUnit = K }
 
 
 view : Model -> Html Message
@@ -113,19 +113,23 @@ conversionForm model =
     form [ onSubmit TemperatureFormSubmitted ]
         [ fieldset []
             [ legend [] [ text "Temperature converter" ]
-            , label [ style "display" "block" ]
-                [ text "Celcius:"
-                , input [ type_ "text", onInput CelciusChanged, value (Temperature.toString model.celcius) ] []
-                ]
-            , label [ style "display" "block" ]
-                [ text "Farenheit:"
-                , input [ type_ "text", onInput FarenheitChanged, value (Temperature.toString model.farenheit) ] []
-                ]
-            , label [ style "display" "block" ]
-                [ text "Kelvin:"
-                , input [ type_ "text", onInput KelvinChanged, value (Temperature.toString model.kelvin) ] []
-                ]
+            , conversionInput CelciusChanged model.celcius "Celcius"
+            , conversionInput FarenheitChanged model.farenheit "Farenheit"
+            , conversionInput KelvinChanged model.kelvin "Kelvin"
             ]
+        ]
+
+
+conversionInput : (String -> Message) -> Temperature a -> String -> Html Message
+conversionInput inputMessage temperature labelText =
+    label [ style "display" "block" ]
+        [ text labelText
+        , input
+            [ type_ "text"
+            , onInput inputMessage
+            , value (Temperature.toString temperature)
+            ]
+            []
         ]
 
 
@@ -137,19 +141,19 @@ conversionOutput model =
 conversionOutputMessage : Model -> String
 conversionOutputMessage model =
     let
-        c : ( Temperature Temperature.Celcius, Unit )
+        c : ( Temperature Celcius, Unit )
         c =
             ( model.celcius, C )
 
-        f : ( Temperature Temperature.Farenheit, Unit )
+        f : ( Temperature Farenheit, Unit )
         f =
             ( model.farenheit, F )
 
-        k : ( Temperature Temperature.Kelvin, Unit )
+        k : ( Temperature Kelvin, Unit )
         k =
             ( model.kelvin, K )
     in
-    case model.lastUpdated of
+    case model.baseUnit of
         C ->
             conversionOutputMessageFormatter c f k
 
